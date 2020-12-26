@@ -10,6 +10,7 @@ Available commands:
 
  - `n [fname]`: Open a new buffer.
  - `s/PAT/REP/`: Replace all instances of `PAT` with `REP` in the same manner as `string.gsub`.
+ - `bN`: Switch to buffer `N`.
  - `c`: Close buffer
  - `w [fname]`: Write file
  - `wq`: Write file and close editor
