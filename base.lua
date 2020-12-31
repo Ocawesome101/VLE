@@ -9,16 +9,20 @@ local args = {...}
 local buffers = {}
 local current = 1
 -- TODO: possibly support terminal resizing?
-local w, h = vt.get_resolution()
+local w, h
 local insert = false
 
 local function mkbuffer(file)
-  local n = buffers[#buffers + 1]
+  local n = #buffers + 1
   buffers[n] = {lines = {""}, unsaved = false, cached = {}, scroll = 0, line = 1, cursor = 0}
   local handle = io.open(file, "r")
   if not handle then
     return
   end
+end
+
+for i=1, #args, 1 do
+  mkbuffer(args[i])
 end
 
 local function update_cursor()
@@ -32,30 +36,73 @@ end
 local function redraw_buffer()
   vt.set_cursor(1, 1)
   local buf = buffers[current]
+  local written = 0
   for i=1, h, 1 do
+    local line = i + buf.scroll
+    io.write("\27[2K")
+    if buf.lines[line] then
+      local lines = math.max(1, math.ceil(#buf.lines[line] / w))
+      if written + lines > h then
+        break
+      end
+      written = written + lines
+      io.write(buf.lines[line])
+    else
+      written = written + 1
+      io.write("\27[94m~\27[39m")
+    end
+    if written >= h then break end
   end
   vt.set_cursor(1, h)
   if insert then
-    io.write("\27[93m-- insert --\27[39m")
+    io.write("\27[2K\27[93m-- insert --\27[39m")
+  else
+    io.write("\27[2K")
   end
   vt.set_cursor(w - 12, h)
   io.write(string.format("%d", buf.line))
   update_cursor()
 end
 
+local function getcommand()
+  vt.set_cursor(1, h)
+  io.write(":")
+  local buf = ""
+  while true do
+    vt.set_cursor(2, h)
+    io.write(buf)
+    local key, flags = kbd.get_key()
+    flags = flags or {}
+    if not (flags.ctrl or flags.alt) then
+      if key == "backspace" then
+        buf = buf:sub(1, -2)
+      else
+        buf = buf .. key
+      end
+    end
+  end
+end
+
 local commands = {
   ["^q$"] = function()
     -- should work on both apotheosis and real-world systems
-    io.write("\27[2J\27[1;1H\27(r\27(L")
+    io.write("\27[2J\27[1;1H\27(r\27(L\27[m")
     os.execute("stty sane")
     os.exit(0)
   end
 }
 
+os.execute("stty raw -echo")
+io.write("\27[2J\27[1;1H\27(R\27(l")
+-- uncomnent this line if running on Apotheosis
+-- io.write("\27[8m")
+w, h = vt.get_term_size()
+
 while true do
   redraw_buffer()
   local key, flags = kbd.get_key()
-  if flags.control then
+  flags = flags or {}
+  if flags.ctrl then
     if key == "i" then
       insert = not insert
     end
