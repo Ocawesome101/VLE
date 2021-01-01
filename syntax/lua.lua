@@ -107,14 +107,15 @@ local function highlight(line)
     else
       local esc = (keywords[word] and keyword_color) or
                   (functions[word] and builtin_color) or
-                  ((word == "true" or word == "false") and const_color) or
+                  ((word == "true" or word == "false" or word == "nil")
+                                      and const_color) or
                   (word:match(kchars) and kchar_color) or
                   (word:match("^%d+$") and const_color) or ""
       if esc == "" then word = word:gsub("_G", builtin_color.."_G\27[39m") end
       ret = ret .. esc .. word .. (esc ~= "" and "\27[39m" or "")
     end
   end
-  return ret
+  return ret .. "\27[39;49m"
 end
 
 return highlight
