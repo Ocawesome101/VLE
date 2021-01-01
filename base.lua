@@ -23,7 +23,6 @@ local function try_get_highlighter(name)
   if ok then
     return ret
   else
-    io.stderr:write(ret)
     ok, ret = pcall(dofile, try)
     if ok then
       return ret
@@ -95,10 +94,9 @@ local function redraw_buffer()
   for i=1, h - 1, 1 do
     vt.set_cursor(1, written + 1)
     local line = i + buf.scroll
-    io.write("\27[2K")
     if buf.lines[line] then
       local lines = math.max(1, math.ceil(#buf.lines[line] / w))
-      if written + lines > h then
+      if written + lines >= h then
         break
       end
       line_len[line] = lines
@@ -112,6 +110,7 @@ local function redraw_buffer()
       written = written + 1
       io.write("\27[94m~\27[39m")
     end
+    io.write("\27[K")
     if written >= h then break end
   end
   vt.set_cursor(1, h)
@@ -119,7 +118,7 @@ local function redraw_buffer()
     io.write("\27[2K\27[93m-- insert --\27[39m")
   end
   vt.set_cursor(w - 12, h)
-  io.write(string.format("%d,%d", buf.line, #buf.lines[buf.line] - buf.cursor))
+  io.write(string.format("\27[K%d,%d", buf.line, #buf.lines[buf.line] - buf.cursor + 1))
   update_cursor(line_len)
 end
 
@@ -136,10 +135,13 @@ local function wrap(buf)
   if buf.cursor > #buf.lines[buf.line] then
     buf.cursor = #buf.lines[buf.line]
   end
-  if buf.line - 1 < buf.scroll and buf.scroll > 0 then
+  if buf.cursor < 0 then
+    buf.cursor = 0
+  end
+  while buf.line - 1 < buf.scroll and buf.scroll > 0 do
     buf.scroll = buf.scroll - 1
   end
-  if buf.line - h + 1 > buf.scroll then
+  while (buf.line - h) + 1 > buf.scroll do
     buf.scroll = buf.scroll + 1
   end
 end
@@ -189,13 +191,17 @@ local function process(key)
       buf.cursor = cursor - 1
     end
   elseif key == "up" then
-    if line > 0 then
+    if line > 1 then
+      local dfe = #(buf.lines[line] or "") - cursor
       buf.line = line - 1
+      buf.cursor = #buf.lines[buf.line] - dfe
       wrap(buf)
     end
   elseif key == "down" then
     if line < #buf.lines then
+      local dfe = #(buf.lines[line] or "") - cursor
       buf.line = line + 1
+      buf.cursor = #buf.lines[buf.line] - dfe
       wrap(buf)
     end
   elseif #key == 1 then
@@ -216,6 +222,7 @@ local function getcommand()
     flags = flags or {}
     if not (flags.ctrl or flags.alt) then
       if key == "backspace" then
+        if #buf == 0 then return end
         buf = buf:sub(1, -2)
       else
         buf = buf .. key
@@ -231,6 +238,46 @@ local function swr(...)
 end
 
 commands = {
+  ["^(%d+)$"] = function(n)
+    local buf = buffers[current]
+    n = tonumber(n) or buf.line
+    buf.line = n
+    wrap(buf)
+  end,
+  ["^d(%d-)$"] = function(n)
+    n = tonumber(n) or 1
+    if n < 1 then
+      swr("\27[101;97mE: positive count required")
+      return
+    end
+    local buf = buffers[current]
+    for i=1, n, 1 do
+      table.remove(buf.lines, buf.line)
+      wrap(buf)
+    end
+    buf.unsaved = true
+  end,
+  ["^move ([%+%-]?)(%d-)$"] = function(sym, num)
+    num = tonumber(num)
+    if not num then
+      swr("\27[101;97mE: invalid range")
+      return
+    end
+    if sym == "-" then
+      num = -num
+      if num < 0 then num = num + 1 end -- why vim does this idk but this is
+                                        -- largely a vim clone so i'll do it
+                                        -- here too.  Maybe vi did it first?
+    end
+    local buf = buffers[current]
+    if buf.line + num < 1 then
+      return
+    end
+    local ltext = table.remove(buf.lines, buf.line)
+    table.insert(buf.lines, buf.line + num, ltext)
+    buf.line = buf.line + num
+    wrap(buf)
+  end,
   ["^w$"] = function()
     commands["^w ([^ ]+)$"](buffers[current].name)
   end,
