@@ -14,15 +14,35 @@ local insert = false
 
 local function mkbuffer(file)
   local n = #buffers + 1
-  buffers[n] = {lines = {""}, unsaved = false, cached = {}, scroll = 0, line = 1, cursor = 0}
+  buffers[n] = {
+    lines = {""},
+    unsaved = false,
+    cached = {},
+    scroll = 0,
+    line = 1,
+    cursor = 0,
+    name = file
+  }
+  if not file then
+    return
+  end
   local handle = io.open(file, "r")
   if not handle then
     return
   end
+  buffers[n].lines = {}
+  for line in handle:lines() do
+    buffers[n].lines[#buffers[n].lines + 1] = line
+  end
+  buffers[n].lines[1] = buffers[n].lines[1] or ""
+  handle:close()
 end
 
 for i=1, #args, 1 do
   mkbuffer(args[i])
+end
+if #buffers == 0 then
+  mkbuffer()
 end
 
 local function update_cursor(l)
@@ -32,7 +52,7 @@ local function update_cursor(l)
   local from_end = buf.cursor
   local text_len = #buf.lines[line]
   local y = 0
-  for i=scroll, line - 1, 1 do
+  for i=scroll, line, 1 do
     y = y + (l[i] or 0)
   end
   vt.set_cursor(1, y)
@@ -46,8 +66,8 @@ local function redraw_buffer()
   local buf = buffers[current]
   local written = 0
   local line_len = {}
-  for i=1, h, 1 do
-    vt.set_cursor(1, i)
+  for i=1, h - 1, 1 do
+    vt.set_cursor(1, written + 1)
     local line = i + buf.scroll
     io.write("\27[2K")
     if buf.lines[line] then
@@ -67,28 +87,91 @@ local function redraw_buffer()
   vt.set_cursor(1, h)
   if insert then
     io.write("\27[2K\27[93m-- insert --\27[39m")
-  else
-    io.write("\27[2K")
   end
   vt.set_cursor(w - 12, h)
   io.write(string.format("%d", buf.line))
   update_cursor(line_len)
 end
 
+local function wrap(buf)
+  if #buf.lines == 0 then
+    buf.lines[1] = ""
+  end
+  if buf.line < 1 then
+    buf.line = 1
+  end
+  if buf.line > #buf.lines then
+    buf.line = #buf.lines
+  end
+  if buf.cursor > #buf.lines[buf.line] then
+    buf.cursor = #buf.lines[buf.line]
+  end
+  if buf.line - 1 < buf.scroll and buf.scroll > 0 then
+    buf.scroll = buf.scroll - 1
+  end
+  if buf.line - h + 1 > buf.scroll then
+    buf.scroll = buf.scroll + 1
+  end
+end
+
 local function process(key)
   local buf = buffers[current]
   local line = buf.line
   local ltext = buf.lines[line]
-  local dfe = buf.cursor
+  local cursor = buf.cursor
   if key == "backspace" then
-    buf.lines[line] = ltext:sub(1, #ltext - cursor - 1) .. ltext:sub(1, #ltext - cursor)
+    if #ltext > 0 then
+      if cursor == #ltext then
+        local tmp = table.remove(buf.lines, line)
+        buf.line = line - 1
+        wrap(buf)
+        line = buf.line
+        buf.lines[line] = buf.lines[line] .. tmp
+        buf.cursor = buf.cursor + 1
+      else
+        buf.lines[line] = ltext:sub(1, #ltext - cursor - 1) .. ltext:sub(#ltext - cursor + 1)
+      end
+    elseif line > 0 then
+      table.remove(buf.lines, line)
+      buf.cursor = 0
+      wrap(buf)
+      process("up")
+    end
+  elseif key == "return" then
+    if cursor == 0 then
+      table.insert(buf.lines, line + 1, "")
+      buf.line = line + 1
+    else
+      local tmp = ltext:sub(#ltext - cursor + 1)
+      table.insert(buf.lines, line + 1, tmp)
+      buf.lines[line] = ltext:sub(1, #ltext - cursor)
+      buf.line = line + 1
+    end
+    wrap(buf)
   elseif key == "left" then
+    if cursor < #ltext then
+      buf.cursor = cursor + 1
+    end
   elseif key == "right" then
+    if cursor > 0 then
+      buf.cursor = cursor - 1
+    end
   elseif key == "up" then
+    if line > 0 then
+      buf.line = line - 1
+      wrap(buf)
+    end
   elseif key == "down" then
+    if line < #buf.lines then
+      buf.line = line + 1
+      wrap(buf)
+    end
+  elseif #key == 1 then
+    buf.lines[line] = ltext:sub(1, #ltext - cursor) .. key .. ltext:sub(#ltext - cursor + 1)
   end
 end
 
+local commands
 local function getcommand()
   vt.set_cursor(1, h)
   io.write("\27[2K:")
@@ -110,7 +193,25 @@ local function getcommand()
   end
 end
 
-local commands = {
+commands = {
+  ["^w$"] = function()
+    commands["^w ([^ ]+)$"](buffers[current].name)
+  end,
+  ["^w ([^ ]+)$"] = function(name)
+    if not name then
+      io.write("\27[2K\27[G\27[101;97mE: no filename\27[39;49m")
+      return
+    end
+    local handle, err = io.open(name, "w")
+    if not handle then
+      io.write("\27[2K\27[G\27[101;97mE: ", err, "\27[39;49m")
+      return
+    end
+    local data = table.concat(buffers[current].lines, "\n") .. "\n"
+    handle:write(data)
+    handle:close()
+    io.write("\"", name, "\", ", tostring(#buffers[current].lines), "L, ", #data, "B written")
+  end,
   ["^q$"] = function()
     -- should work on both apotheosis and real-world systems
     io.write("\27[2J\27[1;1H\27(r\27(L\27[m")
@@ -134,6 +235,8 @@ while true do
       insert = not insert
     elseif key == "h" and insert then
       process("backspace")
+    elseif key == "m" and insert then
+      process("return")
     end
   elseif insert then
     process(key)

@@ -1,4 +1,0 @@
-lua: ./base.lua:123: attempt to call a nil value (global 'process')
-stack traceback:
-	./base.lua:123: in main chunk
-	[C]: in ?
