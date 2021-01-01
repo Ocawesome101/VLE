@@ -1,8 +1,93 @@
 #!/usr/bin/env lua
 -- VLE - Visual Lua Editor.  Not to be confused with VLED. --
 
-local vt = require("term/iface")
-local kbd = require("term/kbd")
+-- basic terminal interface library --
+
+local vt = {}
+
+function vt.set_cursor(x, y)
+  io.write(string.format("\27[%d;%dH", y, x))
+end
+
+function vt.get_cursor()
+  --os.execute("stty raw -echo")
+  io.write("\27[6n")
+  local resp = ""
+  repeat
+    local c = io.read(1)
+    resp = resp .. c
+  until c == "R"
+  local y, x = resp:match("\27%[(%d+);(%d+)R")
+  --os.execute("stty sane")
+  return tonumber(x), tonumber(y)
+end
+
+function vt.get_term_size()
+  local cx, cy = vt.get_cursor()
+  vt.set_cursor(9999, 9999)
+  local w, h = vt.get_cursor()
+  vt.set_cursor(cx, cy)
+  return w, h
+end
+-- keyboard interface with standard VT100 terminals --
+
+local kbd = {}
+
+local patterns = {
+  ["1;7."] = {ctrl = true, alt = true},
+  ["1;5."] = {ctrl = true},
+  ["1;3."] = {alt = true}
+}
+
+local substitutions = {
+  A = "up",
+  B = "down",
+  C = "right",
+  D = "left"
+}
+
+-- this is a neat party trick.  works for all alphabetical characters.
+local function get_char(ascii)
+  return string.char(96 + ascii:byte())
+end
+
+function kbd.get_key()
+--  os.execute("stty raw -echo")
+  local data = io.read(1)
+  local key, flags
+  if data == "\27" then
+    local intermediate = io.read(1)
+    if intermediate == "[" then
+      data = ""
+      repeat
+        local c = io.read(1)
+        data = data .. c
+        if c:match("[a-zA-Z]") then
+          key = c
+        end
+      until c:match("[a-zA-Z]")
+      flags = {}
+      for pat, keys in pairs(patterns) do
+        if data:match(pat) then
+          flags = keys
+        end
+      end
+      key = substitutions[key] or "unknown"
+    else
+      key = io.read(1)
+      flags = {alt = true}
+    end
+  elseif data:byte() > 31 and data:byte() < 127 then
+    key = data
+  elseif data:byte() == 127 then
+    key = "backspace"
+  else
+    key = get_char(data)
+    flags = {ctrl = true}
+  end
+  --os.execute("stty sane")
+  return key, flags
+end
 
 local args = {...}
 
@@ -11,31 +96,6 @@ local current = 1
 -- TODO: possibly support terminal resizing?
 local w, h
 local insert = false
-
-local function try_get_highlighter(name)
-  local ext = name:match("%.(.-)$")
-  if not ext then
-    return
-  end
-  local try = "/usr/share/VLE/"..ext..".lua"
-  local also_try = os.getenv("HOME").."/.local/share/VLE/"..ext..".lua"
-  local ok, ret = pcall(dofile, also_try)
-  if ok then
-    return ret
-  else
-    io.stderr:write(ret)
-    ok, ret = pcall(dofile, try)
-    if ok then
-      return ret
-    else
-      ok, ret = pcall(dofile, "syntax/"..ext..".lua")
-      if ok then
-        return ret
-      end
-    end
-  end
-  return nil
-end
 
 local function mkbuffer(file)
   local n = #buffers + 1
@@ -61,7 +121,6 @@ local function mkbuffer(file)
   end
   buffers[n].lines[1] = buffers[n].lines[1] or ""
   handle:close()
-  buffers[n].highlighter = try_get_highlighter(file)
 end
 
 for i=1, #args, 1 do
@@ -103,11 +162,7 @@ local function redraw_buffer()
       end
       line_len[line] = lines
       written = written + lines
-      local ldata = buf.lines[line]
-      if buf.highlighter then
-        ldata = buf.highlighter(ldata)
-      end
-      io.write(ldata)
+      io.write(buf.lines[line])
     else
       written = written + 1
       io.write("\27[94m~\27[39m")
@@ -119,7 +174,7 @@ local function redraw_buffer()
     io.write("\27[2K\27[93m-- insert --\27[39m")
   end
   vt.set_cursor(w - 12, h)
-  io.write(string.format("%d,%d", buf.line, #buf.lines[buf.line] - buf.cursor))
+  io.write(string.format("%d", buf.line))
   update_cursor(line_len)
 end
 
