@@ -1,8 +1,9 @@
 #!/usr/bin/env lua
 -- VLE - Visual Lua Editor.  Not to be confused with VLED. --
 
-local vt = require("term/iface")
-local kbd = require("term/kbd")
+local vt = require("lib/iface")
+local kbd = require("lib/kbd")
+local syntax = require("lib/syntax")
 
 local args = {...}
 
@@ -17,17 +18,17 @@ local function try_get_highlighter(name)
   if not ext then
     return
   end
-  local try = "/usr/share/VLE/"..ext..".lua"
-  local also_try = os.getenv("HOME").."/.local/share/VLE/"..ext..".lua"
-  local ok, ret = pcall(dofile, also_try)
+  local try = "/usr/share/VLE/"..ext..".vle"
+  local also_try = os.getenv("HOME").."/.local/share/VLE/"..ext..".vle"
+  local ok, ret = pcall(syntax.load, also_try)
   if ok then
     return ret
   else
-    ok, ret = pcall(dofile, try)
+    ok, ret = pcall(syntax.load, try)
     if ok then
       return ret
     else
-      ok, ret = pcall(dofile, "syntax/"..ext..".lua")
+      ok, ret = pcall(syntax.load, "syntax/"..ext..".vle")
       if ok then
         return ret
       end
@@ -222,7 +223,7 @@ local function getcommand()
     flags = flags or {}
     if not (flags.ctrl or flags.alt) then
       if key == "backspace" then
-        if #buf == 0 then return end
+        if #buf == 0 then return "" end
         buf = buf:sub(1, -2)
       else
         buf = buf .. key
@@ -235,6 +236,7 @@ end
 
 local function swr(...)
   io.write("\27[2K\27[G", ...)
+  io.write("\27[39;49m")
 end
 
 commands = {
@@ -243,6 +245,25 @@ commands = {
     n = tonumber(n) or buf.line
     buf.line = n
     wrap(buf)
+  end,
+  ["^b(%d+)$"] = function(n)
+    n = tonumber(n) or 0
+    if not buffers[n] then
+      swr("\27[101;97mE: no such buffer")
+      return
+    end
+    current = n
+  end,
+  ["^c(!?)$"] = function(skip)
+    if buffers[current].unsaved and skip == "" then
+      swr("\27[101;97mE: unsaved work; :c! to override")
+      return
+    end
+    table.remove(buffers, current)
+    current = math.max(1, #buffers)
+    if #buffers == 0 then
+      commands["^q!$"]()
+    end
   end,
   ["^d(%d-)$"] = function(n)
     n = tonumber(n) or 1
@@ -278,6 +299,22 @@ commands = {
     buf.line = buf.line + num
     wrap(buf)
   end,
+  ["^n ([^ ]+)$"] = function(name)
+    mkbuffer(name)
+    current = #buffers
+    swr("Created buffer ", #buffers)
+  end,
+  ["^(%%?)s/(.+)/(.+)/$"] = function(g, search, rep)
+    local buf = buffers[current]
+    if g == "%" then
+      for i=1, #buf.lines, 1 do
+        buf.lines[i] = buf.lines[i]:gsub(search, rep) or buf.lines[i]
+      end
+    else
+      local ltext = buf.lines[buf.line]
+      buf.lines[buf.line] = ltext:gsub(search, rep) or ltext
+    end
+  end,
   ["^w$"] = function()
     commands["^w ([^ ]+)$"](buffers[current].name)
   end,
@@ -311,6 +348,10 @@ commands = {
     io.write("\27[2J\27[1;1H\27(r\27(L\27[m")
     os.execute("stty sane")
     os.exit(0)
+  end,
+  ["^wc$"] = function()
+    commands["^w$"]()
+    commands["^c(!?)$"]()
   end,
   ["^wq$"] = function()
     commands["^w$"]()

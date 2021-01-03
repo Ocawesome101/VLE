@@ -307,7 +307,7 @@ local function getcommand()
     flags = flags or {}
     if not (flags.ctrl or flags.alt) then
       if key == "backspace" then
-        if #buf == 0 then return end
+        if #buf == 0 then return "" end
         buf = buf:sub(1, -2)
       else
         buf = buf .. key
@@ -320,6 +320,7 @@ end
 
 local function swr(...)
   io.write("\27[2K\27[G", ...)
+  io.write("\27[39;49m")
 end
 
 commands = {
@@ -328,6 +329,25 @@ commands = {
     n = tonumber(n) or buf.line
     buf.line = n
     wrap(buf)
+  end,
+  ["^b(%d+)$"] = function(n)
+    n = tonumber(n) or 0
+    if not buffers[n] then
+      swr("\27[101;97mE: no such buffer")
+      return
+    end
+    current = n
+  end,
+  ["^c(!?)$"] = function(skip)
+    if buffers[current].unsaved and skip == "" then
+      swr("\27[101;97mE: unsaved work; :c! to override")
+      return
+    end
+    table.remove(buffers, current)
+    current = math.max(1, #buffers)
+    if #buffers == 0 then
+      commands["^q!$"]()
+    end
   end,
   ["^d(%d-)$"] = function(n)
     n = tonumber(n) or 1
@@ -363,6 +383,22 @@ commands = {
     buf.line = buf.line + num
     wrap(buf)
   end,
+  ["^n ([^ ]+)$"] = function(name)
+    mkbuffer(name)
+    current = #buffers
+    swr("Created buffer ", #buffers)
+  end,
+  ["^(%%?)s/(.+)/(.+)/$"] = function(g, search, rep)
+    local buf = buffers[current]
+    if g == "%" then
+      for i=1, #buf.lines, 1 do
+        buf.lines[i] = buf.lines[i]:gsub(search, rep) or buf.lines[i]
+      end
+    else
+      local ltext = buf.lines[buf.line]
+      buf.lines[buf.line] = ltext:gsub(search, rep) or ltext
+    end
+  end,
   ["^w$"] = function()
     commands["^w ([^ ]+)$"](buffers[current].name)
   end,
@@ -396,6 +432,10 @@ commands = {
     io.write("\27[2J\27[1;1H\27(r\27(L\27[m")
     os.execute("stty sane")
     os.exit(0)
+  end,
+  ["^wc$"] = function()
+    commands["^w$"]()
+    commands["^c(!?)$"]()
   end,
   ["^wq$"] = function()
     commands["^w$"]()

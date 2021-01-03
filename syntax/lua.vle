@@ -1,0 +1,10 @@
+# VLE highlighting V2: Electric Boogaloo
+
+comment --
+const true false nil
+constpat ::.+::
+keychars []{}()=+"'%/|><%*
+keywords local while for repeat until do if in else elseif and or not then end
+keywords function return goto break
+numpat ^%d+$
+numpat ^0x[0-9a-fA-F]+$

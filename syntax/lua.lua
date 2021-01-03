@@ -1,4 +1,4 @@
--- Lua highlighting for TLE --
+-- Lua highlighting for VLE --
 
 local keyword_color, builtin_color, const_color, str_color,
                                                           cmt_color, kchar_color
