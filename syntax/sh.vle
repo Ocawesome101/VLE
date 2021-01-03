@@ -1,0 +1,5 @@
+# Basic highlighting for shell scripts
+
+keychars ={}[]()$|><&*
+keywords if then else elif fi while do done case in
+constpat ^%-(.+)$
