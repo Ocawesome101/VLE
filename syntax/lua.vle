@@ -4,7 +4,40 @@ comment --
 const true false nil
 constpat ::.+::
 keychars []{}()=+"'%/|><%*
-keywords local while for repeat until do if in else elseif and or not then end
+keywords const close local while for repeat until do if in else elseif and or not then end
 keywords function return goto break
 numpat ^%d+$
 numpat ^0x[0-9a-fA-F]+$
+builtin tonumber dofile xpcall pcall require string setmetatable package warn _G
+builtin ipairs arg load assert utf8 debug getmetatable print error next rawlen
+builtin coroutine select io math pairs _VERSION rawequal table type rawget
+builtin loadfile os tostring collectgarbage rawset
+# all builtins from Lua 5.4
+builtin string.match string.find string.packsize string.gmatch string.dump
+builtin string.format string.len string.sub string.pack string.char string.byte
+builtin string.upper string.reverse string.gsub string.unpack string.rep 
+builtin string.lower package.config package.loaded package.cpath
+builtin package.searchers package.path package.preload package.searchpath
+builtin package.loadlib _G.tonumber _G.dofile _G.xpcall _G.pcall _G.require
+builtin _G.string _G.setmetatable _G.package _G.warn _G._G _G.ipairs _G.arg
+builtin _G.load _G.assert _G.utf8 _G.debug _G.getmetatable _G.print _G.error
+builtin _G.next _G.rawlen _G.coroutine _G.select _G.io _G.math _G.pairs
+builtin _G._VERSION _G.rawequal _G.table _G.type _G.rawget _G.loadfile _G.os
+builtin _G.tostring _G.collectgarbage _G.rawset arg.0 utf8.char utf8.codepoint
+builtin utf8.offset utf8.charpattern utf8.codes utf8.len debug.upvaluejoin
+builtin debug.getupvalue debug.debug debug.getmetatable debug.getuservalue 
+builtin debug.sethook debug.traceback debug.setupvalue debug.setmetatable
+builtin debug.getlocal debug.gethook debug.setcstacklimit debug.setlocal
+builtin debug.getinfo debug.getregistry debug.upvalueid debug.setuservalue 
+builtin coroutine.close coroutine.isyieldable coroutine.status coroutine.create
+builtin coroutine.running coroutine.wrap coroutine.resume coroutine.yield 
+builtin io.lines io.flush io.output io.type io.read io.stdin io.popen io.close
+builtin io.stderr io.tmpfile io.stdout io.write io.open io.input math.ldexp
+builtin math.randomseed math.exp math.fmod math.mininteger math.pi math.huge
+builtin math.ult math.acos math.random math.cos math.frexp math.sin math.log
+builtin math.rad math.asin math.maxinteger math.log10 math.type math.cosh
+builtin math.sinh math.pow math.tointeger math.tan math.atan2 math.ceil math.abs
+builtin math.tanh math.sqrt math.modf math.max math.atan math.deg math.min 
+builtin math.floor table.remove table.sort table.insert table.pack table.unpack
+builtin table.move table.concat os.exit os.remove os.date os.rename os.getenv
+builtin os.setlocale os.clock os.tmpname os.difftime os.time os.execute
