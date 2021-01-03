@@ -1,0 +1,4 @@
+# basic markdown highlighting
+
+strings off # markdown has no strings, so disable them
+keychars -*`[]()

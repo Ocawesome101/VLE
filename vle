@@ -115,6 +115,7 @@ do
   local functions = {}
   local constants = {}
   local cprefix = "#"
+  local strings = true
   local function split(l)
     local words = {}
     for w in l:gmatch("[^ ]+") do
@@ -149,6 +150,12 @@ do
       end
     elseif cmd == "constpat" and words[2] then
       constpat[#constpat + 1] = words[2]
+    elseif cmd == "strings" then
+      if words[2] == "on" or words[2] == "true" then
+        strings = true
+      elseif words[2] == "off" or words[2] == "false" then
+        strings = false
+      end
     end
   end
 
@@ -191,7 +198,7 @@ do
       local in_str = false
       local in_cmt = false
       for i, word in ipairs(words(line)) do
-        if word:match("[\"']") and not in_str and not in_cmt then
+        if word:match("[\"']") and strings and not in_str and not in_cmt then
           in_str = true
           ret = ret .. str_color .. word
         elseif in_str then
