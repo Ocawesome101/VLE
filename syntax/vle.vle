@@ -1,4 +1,5 @@
 # VLE highlighting for... VLE
 
+strings off
 comment #
 keywords strings keychars comment keywords const builtin numpat constpat

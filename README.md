@@ -36,5 +36,6 @@ This parser checks the first word of every line for the following words, and act
  - `const`: Sets keywords to be highlighted as constants (i.e. `true`, `false`).
  - `builtin`: Adds language builtins (i.e. `print`, `tostring`).  Should be used to highlight functions.
  - `constpat`: Adds a pattern against which words will be checked to see if they are constants.  Useful in cases such as Lua's `goto`, where `goto` targets must be dynamically matched.  Also useful for numbers.
+ - `strings [on|off|true|false]`: Sets whether the parser should highlight strings.
 
-If you have any questions, or you discover a bug, poke me at `i develop things#5343` on Discord.  I also usually hang out on EsperNet IRC, in `#oc`, as Ocawesome101..
+If you have any questions, or you discover a bug, poke me at `i develop things#5343` on Discord.  I also usually hang out on EsperNet IRC, in `#oc`, as Ocawesome101.
