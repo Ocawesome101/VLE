@@ -167,6 +167,7 @@ local function process(key)
       end
     elseif line > 0 then
       table.remove(buf.lines, line)
+      buf.cursor = 0
       wrap(buf)
       process("up")
     end
