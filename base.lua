@@ -155,29 +155,30 @@ local function process(key)
   if key == "backspace" then
     if #ltext > 0 then
       if cursor == #ltext then
+        local old = cursor
         local tmp = table.remove(buf.lines, line)
         buf.line = line - 1
         wrap(buf)
         line = buf.line
         buf.lines[line] = buf.lines[line] .. tmp
-        buf.cursor = buf.cursor + 1
+        buf.cursor = math.min(old, #buf.lines[line])
       else
         buf.lines[line] = ltext:sub(1, #ltext - cursor - 1) .. ltext:sub(#ltext - cursor + 1)
       end
     elseif line > 0 then
       table.remove(buf.lines, line)
-      buf.cursor = 0
       wrap(buf)
       process("up")
     end
     buf.unsaved = true
   elseif key == "return" then
+    local ident = ltext:match("^(%s+)") or ""
     if cursor == 0 then
-      table.insert(buf.lines, line + 1, "")
+      table.insert(buf.lines, line + 1, (" "):rep(#ident))
       buf.line = line + 1
     else
       local tmp = ltext:sub(#ltext - cursor + 1)
-      table.insert(buf.lines, line + 1, tmp)
+      table.insert(buf.lines, line + 1, (" "):rep(#ident) .. tmp)
       buf.lines[line] = ltext:sub(1, #ltext - cursor)
       buf.line = line + 1
     end
