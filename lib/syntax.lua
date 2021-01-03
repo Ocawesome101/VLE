@@ -84,12 +84,15 @@ do
   end
 
   local function mkhighlighter()
-    local kchars = "[%" .. table.concat(keychars, "%") .. "]"
+    local kchars = ""
+    if #keychars > 0 then
+      kchars = "[%" .. table.concat(keychars, "%") .. "]"
+    end
     local function words(ln)
       local words = {}
       local ws, word = "", ""
       for char in ln:gmatch(".") do
-        if char:match(kchars) or char == " " then
+        if (char:match(kchars) and #kchars > 0) or char == " " then
           ws = char
           if #word > 0 then words[#words + 1] = word end
           if #ws > 0 then words[#words + 1] = ws end
@@ -105,7 +108,7 @@ do
     end
 
     local function highlight(line)
-      local ret = ""
+      local ret = "\27[39m"
       local in_str = false
       local in_cmt = false
       for i, word in ipairs(words(line)) do
@@ -127,7 +130,7 @@ do
           local esc = (keywords[word] and keyword_color) or
                       (functions[word] and builtin_color) or
                       (match_constant(word) and const_color) or
-                      (word:match(kchars) and kchar_color) or
+                      (#kchars > 0 and word:match(kchars) and kchar_color) or
                       (match_number(word) and const_color) or ""
           ret = ret .. esc .. word .. (esc ~= "" and "\27[39m" or "")
         end
