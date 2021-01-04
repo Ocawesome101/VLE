@@ -1,0 +1,60 @@
+# python.  ugh.
+
+const True False None
+comment #
+constpat ^%d+$
+constpat ^-%d+$
+constpat ^0x%x+$
+constpat ^0b[01]$
+constpat ^0o[0-7]$
+keychars %()!=+[]|@*&^.:/<>
+keywords break for not class from or continue global pass def if raise and del
+keywords import return as elif in try assert else is while async except lambda
+keywords with await finally nonlocal yield exec
+builtin NotImplemented Ellipsis abs all any bin bool bytearray callable chr
+builtin classmethod compile complex delattr dict dir divmod enumerate eval filter
+builtin float format frozenset getattr globals hasattr hash help hex id input int
+builtin isinstance issubclass iter len list locals map max memoryview min next
+builtin object oct open ord pow print property range repr reversed round set
+builtin setattr slice sorted staticmethod str sum super tuple type vars zip
+# python 2 only
+builtin basestring cmp execfile file long raw_input reduce reload unichr unicode
+builtin xrange apply buffer coerce intern
+# python 3 only
+builtin ascii bytes exec
+
+# errors!
+# builtin BaseException Exception
+builtin ArithmeticError BufferError
+builtin LookupError
+# builtin base exceptions removed in Python 3
+builtin EnvironmentError StandardError
+# builtin exceptions (actually raised)
+builtin AssertionError AttributeError
+builtin EOFError FloatingPointError GeneratorExit
+builtin ImportError IndentationError
+builtin IndexError KeyError KeyboardInterrupt
+builtin MemoryError NameError NotImplementedError
+builtin OSError OverflowError ReferenceError
+builtin RuntimeError StopIteration SyntaxError
+builtin SystemError SystemExit TabError TypeError
+builtin UnboundLocalError UnicodeError
+builtin UnicodeDecodeError UnicodeEncodeError
+builtin UnicodeTranslateError ValueError
+builtin ZeroDivisionError
+# builtin OS exceptions in Python 3
+builtin BlockingIOError BrokenPipeError
+builtin ChildProcessError ConnectionAbortedError
+builtin ConnectionError ConnectionRefusedError
+builtin ConnectionResetError FileExistsError
+builtin FileNotFoundError InterruptedError
+builtin IsADirectoryError NotADirectoryError
+builtin PermissionError ProcessLookupError
+builtin RecursionError StopAsyncIteration
+builtin TimeoutError
+# builtin exceptions deprecated/removed in Python 3
+builtin IOError VMSError WindowsError
+# builtin warnings
+builtin BytesWarning DeprecationWarning FutureWarning
+builtin ImportWarning PendingDeprecationWarning
+builtin ResourceWarning

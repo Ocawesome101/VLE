@@ -57,7 +57,9 @@ local function mkbuffer(file)
   end
   buffers[n].lines = {}
   for line in handle:lines() do
-    buffers[n].lines[#buffers[n].lines + 1] = line
+    buffers[n].lines[#buffers[n].lines + 1]
+        -- strip Windows line endings
+        = line:gsub("\r", "")
   end
   buffers[n].lines[1] = buffers[n].lines[1] or ""
   handle:close()
@@ -106,12 +108,11 @@ local function redraw_buffer()
       if buf.highlighter then
         ldata = buf.highlighter(ldata)
       end
-      io.write(ldata, "\27[39;49m")
+      io.write("\27[2K", ldata)
     else
       written = written + 1
-      io.write("\27[94m~\27[39m")
+      io.write("\27[2K\27[94m~\27[39m")
     end
-    io.write("\27[K")
     if written >= h then break end
   end
   vt.set_cursor(1, h)
@@ -247,7 +248,6 @@ commands = {
     n = tonumber(n) or buf.line
     buf.line = n
     wrap(buf)
-    io.write("\27[2J")
   end,
   ["^b(%d+)$"] = function(n)
     n = tonumber(n) or 0
