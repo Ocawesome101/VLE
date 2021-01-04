@@ -12,7 +12,9 @@ local substitutions = {
   A = "up",
   B = "down",
   C = "right",
-  D = "left"
+  D = "left",
+  ["5"] = "pgUp",
+  ["6"] = "pgDown",
 }
 
 -- this is a neat party trick.  works for all alphabetical characters.
