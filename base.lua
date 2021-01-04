@@ -108,11 +108,12 @@ local function redraw_buffer()
       if buf.highlighter then
         ldata = buf.highlighter(ldata)
       end
-      io.write("\27[2K", ldata)
+      io.write(ldata)
     else
       written = written + 1
-      io.write("\27[2K\27[94m~\27[39m")
+      io.write("\27[94m~\27[39m")
     end
+    io.write("\27[K")
     if written >= h then break end
   end
   vt.set_cursor(1, h)
