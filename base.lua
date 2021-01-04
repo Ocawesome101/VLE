@@ -57,7 +57,9 @@ local function mkbuffer(file)
   end
   buffers[n].lines = {}
   for line in handle:lines() do
-    buffers[n].lines[#buffers[n].lines + 1] = line
+    buffers[n].lines[#buffers[n].lines + 1]
+        -- strip Windows line endings
+        = line:gsub("\r", "")
   end
   buffers[n].lines[1] = buffers[n].lines[1] or ""
   handle:close()
@@ -214,9 +216,9 @@ local function process(key)
 end
 
 local commands
-local function getcommand()
+local function getinput(pref)
   vt.set_cursor(1, h)
-  io.write("\27[2K:")
+  io.write("\27[2K", pref or ":")
   local buf = ""
   while true do
     vt.set_cursor(2, h)
@@ -367,6 +369,7 @@ io.write("\27[2J\27[1;1H\27(R\27(l")
 -- io.write("\27[8m")
 w, h = vt.get_term_size()
 
+local last_pat = ""
 while true do
   redraw_buffer()
   local key, flags = kbd.get_key()
@@ -381,13 +384,42 @@ while true do
     elseif key == "m" and insert then
       process("return")
     end
+  elseif (key == "i" or key == "a") and not insert then
+    insert = true
   elseif key == "up" or key == "down" or key == "left" or key == "right" or insert then
     process(key)
   elseif key == ":" then
-    local cmd = getcommand()
+    local cmd = getinput(":")
     for k, v in pairs(commands) do
       if cmd:match(k) then
         v(cmd:match(k))
+      end
+    end
+  elseif key == "/" then
+    local search = getinput("/")
+    if #search == 0 then search = last_pat end
+    if #search > 0 then
+      last_pat = search
+      local found = false
+      local buf = buffers[current]
+      for i=buf.line+1, #buf.lines, 1 do
+        if buf.lines[i]:match(search) then
+          buf.line = i
+          found = true
+          wrap(buf)
+          break
+        end
+      end
+      if not found then
+        for i=1, #buf.lines, 1 do
+          if buf.lines[i]:match(search) then
+            buf.line = i
+            found = true
+            wrap(buf)
+            swr("\27[91mSearch hit BOTTOM, continuing at TOP")
+            break
+          end
+        end
       end
     end
   end

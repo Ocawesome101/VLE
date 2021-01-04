@@ -7,6 +7,7 @@ keychars ~[]{}()=+"'%/|><%*
 keywords const close local while for repeat until do if in else elseif and or not then end
 keywords function return goto break
 constpat ^%d+$
+constpat ^-%d+$
 constpat ^0x[0-9a-fA-F]+$
 builtin tonumber dofile xpcall pcall require string setmetatable package warn _G
 builtin ipairs arg load assert utf8 debug getmetatable print error next rawlen
