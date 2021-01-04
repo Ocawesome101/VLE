@@ -106,7 +106,7 @@ local function redraw_buffer()
       if buf.highlighter then
         ldata = buf.highlighter(ldata)
       end
-      io.write(ldata)
+      io.write(ldata, "\27[39;49m")
     else
       written = written + 1
       io.write("\27[94m~\27[39m")
@@ -247,6 +247,7 @@ commands = {
     n = tonumber(n) or buf.line
     buf.line = n
     wrap(buf)
+    io.write("\27[2J")
   end,
   ["^b(%d+)$"] = function(n)
     n = tonumber(n) or 0
