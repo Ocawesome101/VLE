@@ -79,19 +79,17 @@ local function update_cursor(l)
   local scroll = buf.scroll
   local from_end = buf.cursor
   local text_len = #buf.lines[line]
-  local y = 0
+  local x, y = 1, 0
   for i=scroll, line - 1, 1 do
     y = y + (l[i] or 0)
   end
-  vt.set_cursor(1, y)
-  local xd, yd = text_len - from_end + 1, y + 1
-  if text_len > w then
-    local n_lines = l[line]
-    local lines_back = math.max(1, math.ceil(from_end / w))
-    yd = n_lines - lines_back + y
-    xd = text_len - math.min(text_len, lines_back * w)
+  y = y + 1
+  x = text_len - from_end + 1
+  while x > w do
+    x = x - w
+    y = y + 1
   end
-  vt.set_cursor(math.min(w, xd), yd)
+  vt.set_cursor(x, y)
 end
 
 -- status bar on bottom
