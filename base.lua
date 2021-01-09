@@ -100,6 +100,8 @@ end
 
 -- status bar on bottom
 -- -- MODE -- [---------] cy
+local _blank = string.format("\27[%dm~\27[39m", rc.blank or 94)
+local _insert = string.format("\27[%dm-- insert --\27[39m", rc.insert or 93)
 local function redraw_buffer()
   vt.set_cursor(1, 1)
   local buf = buffers[current]
@@ -122,14 +124,14 @@ local function redraw_buffer()
       io.write(ldata)
     else
       written = written + 1
-      io.write("\27[94m~\27[39m")
+      io.write(_blank)
     end
     io.write("\27[K")
     if written >= h then break end
   end
   vt.set_cursor(1, h)
   if insert then
-    io.write("\27[2K\27[93m-- insert --\27[39m")
+    io.write("\27[2K", _insert)
   end
   vt.set_cursor(w - 12, h)
   io.write(string.format("\27[K%d,%d", buf.line, #buf.lines[buf.line] - buf.cursor + 1))

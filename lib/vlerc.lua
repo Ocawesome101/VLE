@@ -15,11 +15,13 @@ do
 
   local fields = {
     bi = "builtin",
+    bn = "blank",
     ct = "constant",
     cm = "comment",
-    st = "string",
+    is = "insert",
     kw = "keyword",
     kc = "keychar",
+    st = "string",
   }
   local colors = {
     black = 30,
@@ -60,5 +62,6 @@ do
   for line in handle:lines() do
     parse(line)
   end
+  handle:close()
   ::anyways::
 end
