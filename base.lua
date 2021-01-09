@@ -49,6 +49,7 @@ local function mkbuffer(file)
     cursor = 0,
     name = file
   }
+  buffers[n].highlighter = try_get_highlighter(file)
   if not file then
     return
   end
@@ -64,7 +65,6 @@ local function mkbuffer(file)
   end
   buffers[n].lines[1] = buffers[n].lines[1] or ""
   handle:close()
-  buffers[n].highlighter = try_get_highlighter(file)
 end
 
 for i=1, #args, 1 do
@@ -91,7 +91,7 @@ local function update_cursor(l)
     x = x - w
     y = y + 1
   end
-  while y > h - 2 do
+  while y >= h - 1 do
     y = y - 1
     buf.scroll = buf.scroll + 1
   end
@@ -226,6 +226,7 @@ local function process(key)
     buf.lines[line] = ltext:sub(1, #ltext - cursor) .. key .. ltext:sub(#ltext - cursor + 1)
     buf.unsaved = true
   end
+  redraw_buffer()
 end
 
 local commands

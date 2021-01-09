@@ -108,11 +108,13 @@ do
 
   local fields = {
     bi = "builtin",
+    bn = "blank",
     ct = "constant",
     cm = "comment",
-    st = "string",
+    is = "insert",
     kw = "keyword",
     kc = "keychar",
+    st = "string",
   }
   local colors = {
     black = 30,
@@ -153,6 +155,7 @@ do
   for line in handle:lines() do
     parse(line)
   end
+  handle:close()
   ::anyways::
 end
 -- library for basic syntax highlighting definitions --
@@ -357,6 +360,7 @@ local function mkbuffer(file)
     cursor = 0,
     name = file
   }
+  buffers[n].highlighter = try_get_highlighter(file)
   if not file then
     return
   end
@@ -372,7 +376,6 @@ local function mkbuffer(file)
   end
   buffers[n].lines[1] = buffers[n].lines[1] or ""
   handle:close()
-  buffers[n].highlighter = try_get_highlighter(file)
 end
 
 for i=1, #args, 1 do
@@ -399,7 +402,7 @@ local function update_cursor(l)
     x = x - w
     y = y + 1
   end
-  while y > h - 2 do
+  while y >= h - 1 do
     y = y - 1
     buf.scroll = buf.scroll + 1
   end
@@ -408,6 +411,8 @@ end
 
 -- status bar on bottom
 -- -- MODE -- [---------] cy
+local _blank = string.format("\27[%dm~\27[39m", rc.blank or 94)
+local _insert = string.format("\27[%dm-- insert --\27[39m", rc.insert or 93)
 local function redraw_buffer()
   vt.set_cursor(1, 1)
   local buf = buffers[current]
@@ -430,14 +435,14 @@ local function redraw_buffer()
       io.write(ldata)
     else
       written = written + 1
-      io.write("\27[94m~\27[39m")
+      io.write(_blank)
     end
     io.write("\27[K")
     if written >= h then break end
   end
   vt.set_cursor(1, h)
   if insert then
-    io.write("\27[2K\27[93m-- insert --\27[39m")
+    io.write("\27[2K", _insert)
   end
   vt.set_cursor(w - 12, h)
   io.write(string.format("\27[K%d,%d", buf.line, #buf.lines[buf.line] - buf.cursor + 1))
@@ -532,6 +537,7 @@ local function process(key)
     buf.lines[line] = ltext:sub(1, #ltext - cursor) .. key .. ltext:sub(#ltext - cursor + 1)
     buf.unsaved = true
   end
+  redraw_buffer()
 end
 
 local commands
