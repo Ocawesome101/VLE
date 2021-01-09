@@ -43,7 +43,7 @@ local function mkbuffer(file)
   buffers[n] = {
     lines = {""},
     unsaved = false,
-    cached = {},
+    cache = {},
     scroll = 0,
     line = 1,
     cursor = 0,
@@ -116,13 +116,15 @@ local function redraw_buffer()
         break
       end
       line_len[line] = lines
+      if buf.cache[line] then break end
+      buf.cache[line] = true
       written = written + lines
       local ldata = buf.lines[line]
       if buf.highlighter then
         ldata = buf.highlighter(ldata)
       end
       io.write(ldata)
-    else
+    elseif not buf.cache[line] then
       written = written + 1
       io.write(_blank)
     end
@@ -156,9 +158,11 @@ local function wrap(buf)
   end
   while buf.line - 1 < buf.scroll and buf.scroll > 0 do
     buf.scroll = buf.scroll - 1
+    buf.cache = {}
   end
   while (buf.line - h) + 1 > buf.scroll do
     buf.scroll = buf.scroll + 1
+    buf.cache = {}
   end
 end
 
@@ -170,6 +174,9 @@ local function process(key)
   if key == "backspace" then
     if #ltext > 0 then
       if cursor == #ltext then
+        for i=line, h - (buf.scroll + line), 1 do
+          buf.cache[line] = nil
+        end
         local old = cursor
         local tmp = table.remove(buf.lines, line)
         buf.line = line - 1
@@ -178,6 +185,7 @@ local function process(key)
         buf.lines[line] = buf.lines[line] .. tmp
         buf.cursor = math.min(old, #buf.lines[line])
       else
+        buf.cache[line] = nil
         buf.lines[line] = ltext:sub(1, #ltext - cursor - 1) .. ltext:sub(#ltext - cursor + 1)
       end
     elseif line > 0 then
@@ -189,6 +197,9 @@ local function process(key)
     buf.unsaved = true
   elseif key == "return" then
     local ident = ltext:match("^(%s+)") or ""
+    for i=line, h - (buf.scroll + line), 1 do
+      buf.cache[line] = nil
+    end
     if cursor == 0 then
       table.insert(buf.lines, line + 1, (" "):rep(#ident))
       buf.line = line + 1
@@ -223,6 +234,7 @@ local function process(key)
       wrap(buf)
     end
   elseif #key == 1 then
+    buf.cache[line] = nil
     buf.lines[line] = ltext:sub(1, #ltext - cursor) .. key .. ltext:sub(#ltext - cursor + 1)
     buf.unsaved = true
   end
