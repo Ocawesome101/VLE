@@ -79,12 +79,22 @@ local function update_cursor(l)
   local scroll = buf.scroll
   local from_end = buf.cursor
   local text_len = #buf.lines[line]
-  local y = 0
-  for i=scroll, line, 1 do
+  local x, y, t = 1, 0, 0
+  for i=scroll, line - 1, 1 do
     y = y + (l[i] or 0)
   end
-  vt.set_cursor(1, y)
-  io.write(string.rep("\27[C", text_len - from_end))
+  t = y
+  y = y + 1
+  x = text_len - from_end + 1
+  while x > w do
+    x = x - w
+    y = y + 1
+  end
+  while y > h - 2 do
+    y = y - 1
+    buf.scroll = buf.scroll + 1
+  end
+  vt.set_cursor(x, y)
 end
 
 -- status bar on bottom

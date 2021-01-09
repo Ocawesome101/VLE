@@ -1,0 +1,13 @@
+# basic C highlighting
+
+comment //
+keychars ()[]*&^|{}=<>;
+const true false
+constpat ^#.+$
+constpat ^%d+$
+constpat ^-%d+$
+constpat ^0x[a-fA-F0-9]+$
+keywords if then else while for
+builtin int int32 int64 int32_t int64_t uint uint32 uint64 uint32_t uint64_t
+builtin int16 int16_t uint16 uint16_t char struct bool float void ssize_t
+builtin uint8 uint8_t int8 int8_t size_t cuint8_t
