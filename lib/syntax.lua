@@ -3,9 +3,20 @@
 local syntax = {}
 
 do
-  local keyword_color, builtin_color, const_color, str_color,
-                                                          cmt_color, kchar_color
-    = 91,            92,            95,         93,       90,        94
+  local 
+  keyword_color,
+  builtin_color,
+  const_color,
+  str_color,
+  cmt_color,
+  kchar_color
+  =
+  rc.keyword or 91,
+  rc.builtin or 92,
+  rc.constant or 95,
+  rc.string or 93,
+  rc.comment or 90,
+  rc.keychar or 94
 
   local function esc(n)
     return string.format("\27[%dm", n)
