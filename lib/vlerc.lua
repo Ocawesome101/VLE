@@ -1,6 +1,6 @@
 -- VLERC parsing
 
-_G.rc = {}
+rc = {}
 
 do
   local function split(line)
@@ -22,9 +22,16 @@ do
     kc = "keychar",
   }
   local colors = {
-    red = 31,
-    green = 32,
-    yellow = 33,
+    black = 30,
+    gray = 90,
+    lightGray = 37,
+    red = 91,
+    green = 92,
+    yellow = 93,
+    blue = 94,
+    magenta = 95,
+    cyan = 96,
+    white = 97
   }
   
   local function parse(line)
@@ -32,6 +39,7 @@ do
     if #words < 1 then return end
     local c = pop(words)
     -- color keyword 32
+    -- co kw green
     if c == "color" or c == "co" and #words >= 2 then
       local field = pop(words)
       field = fields[field] or field
@@ -45,4 +53,12 @@ do
       rc[field] = color
     end
   end
+
+  local home = os.getenv("HOME")
+  local handle = io.open(home .. "/.vlerc", "r")
+  if not handle then goto anyways end
+  for line in handle:lines() do
+    parse(line)
+  end
+  ::anyways::
 end

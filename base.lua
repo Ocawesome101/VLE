@@ -3,7 +3,7 @@
 
 local vt = require("lib/iface")
 local kbd = require("lib/kbd")
-local rc = require("lib/vlerc")
+require("lib/vlerc")
 local syntax = require("lib/syntax")
 
 local args = {...}
