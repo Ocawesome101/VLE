@@ -375,7 +375,10 @@ commands = {
   end,
   ["^q!$"] = function()
     -- should work on both apotheosis and real-world systems
-    io.write("\27[2J\27[1;1H\27(r\27(L\27[m")
+    io.write("\27[2J\27[1;1H\27[m")
+    if (not os.getenv("TERM")) or os.getenv("TERM"):match("OpenComputers") then
+      io.write("\27(r\27(L\27[m")
+    end
     os.execute("stty sane")
     os.exit(0)
   end,
@@ -390,9 +393,11 @@ commands = {
 }
 
 os.execute("stty raw -echo")
-io.write("\27[2J\27[1;1H\27(R\27(l")
--- uncomnent this line if running on Apotheosis
--- io.write("\27[8m")
+io.write("\27[2J\27[1;1H")
+if (not os.getenv("TERM")) or os.getenv("TERM"):match("OpenComputers") then
+  io.write("\27(R\27(l\27[8m")
+end
+
 w, h = vt.get_term_size()
 
 local last_pat = ""
