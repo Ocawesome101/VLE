@@ -116,7 +116,7 @@ local function redraw_buffer()
         break
       end
       line_len[line] = lines
-      if buf.cache[line] then break end
+--      if buf.cache[line] then goto continue end
       buf.cache[line] = true
       written = written + lines
       local ldata = buf.lines[line]
@@ -129,6 +129,7 @@ local function redraw_buffer()
       io.write(_blank)
     end
     io.write("\27[K")
+    ::continue::
     if written >= h then break end
   end
   vt.set_cursor(1, h)
@@ -169,6 +170,7 @@ end
 local function process(key)
   local buf = buffers[current]
   local line = buf.line
+  buf.cache[line] = nil
   local ltext = buf.lines[line]
   local cursor = buf.cursor
   if key == "backspace" then
@@ -185,7 +187,6 @@ local function process(key)
         buf.lines[line] = buf.lines[line] .. tmp
         buf.cursor = math.min(old, #buf.lines[line])
       else
-        buf.cache[line] = nil
         buf.lines[line] = ltext:sub(1, #ltext - cursor - 1) .. ltext:sub(#ltext - cursor + 1)
       end
     elseif line > 0 then
@@ -234,7 +235,6 @@ local function process(key)
       wrap(buf)
     end
   elseif #key == 1 then
-    buf.cache[line] = nil
     buf.lines[line] = ltext:sub(1, #ltext - cursor) .. key .. ltext:sub(#ltext - cursor + 1)
     buf.unsaved = true
   end
