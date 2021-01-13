@@ -4,6 +4,8 @@ Not to be confused with Monolith's VLED.
 
 This is a text editor, similar to [TLE](https://github.com/ocawesome101/tle), but modal.
 
+To run `standalone.sh` on Mac OS you'll need to install GNU coreutils because there are some dependencies on GNU-specific behavior.
+
 Commands are generally single letters, followed if necessary by arguments.  All commands must be prefixed with a `:`.  Switch between insert and command modes with the `[TAB]` key.  Otherwise mostly use like Vim.
 
 Supports syntax highlighting - see **Highlighting** below.
