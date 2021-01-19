@@ -15,6 +15,7 @@ local w, h
 local insert = false
 
 local function try_get_highlighter(name)
+  name = name or "NEW"
   local ext = name:match("%.(.-)$")
   if not ext then
     return
