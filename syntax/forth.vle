@@ -1,0 +1,8 @@
+# FORTH syntax file
+# Only supports the subset of FORTH that is supported by Open Forth
+
+comment \
+constpat ^%d+$ ^0x[0-9a-fA-F]$
+keychars + * / - . ; : < = >
+keywords cr if else then do loop drop dup mod swap i words
+builtin power read invoke memfree write eval clist split memtotal
