@@ -116,8 +116,10 @@ local function mkbuffer(file)
   end
   buffers[n].lines[1] = buffers[n].lines[1] or ""
   handle:close()
-  local og_pos = get_last_pos(file)
-  buffers[n].line = og_pos
+  if rc.cachelastline then
+    local og_pos = get_last_pos(file)
+    buffers[n].line = og_pos
+  end
 end
 
 for i=1, #args, 1 do

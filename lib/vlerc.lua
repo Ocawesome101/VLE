@@ -53,6 +53,10 @@ do
       end
       if not color then return end
       rc[field] = color
+    elseif c == "cachelastline" then
+      local arg = pop(words)
+      arg = (arg == "yes") or (arg == "true")
+      rc.cachelastline = arg
     end
   end
 

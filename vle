@@ -146,6 +146,10 @@ do
       end
       if not color then return end
       rc[field] = color
+    elseif c == "cachelastline" then
+      local arg = pop(words)
+      arg = (arg == "yes") or (arg == "true")
+      rc.cachelastline = arg
     end
   end
 
@@ -427,8 +431,10 @@ local function mkbuffer(file)
   end
   buffers[n].lines[1] = buffers[n].lines[1] or ""
   handle:close()
-  local og_pos = get_last_pos(file)
-  buffers[n].line = og_pos
+  if rc.cachelastline then
+    local og_pos = get_last_pos(file)
+    buffers[n].line = og_pos
+  end
 end
 
 for i=1, #args, 1 do
