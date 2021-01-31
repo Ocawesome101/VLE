@@ -248,7 +248,7 @@ local function process(key)
       table.remove(buf.lines, line)
       buf.cursor = 0
       wrap(buf)
-      process("up")
+      --process("up")
     end
     buf.unsaved = true
   elseif key == "return" then
