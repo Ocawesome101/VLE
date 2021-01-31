@@ -602,7 +602,7 @@ local function process(key)
     if line < #buf.lines then
       local dfe = utf8.len(buf.lines[line] or "") - cursor
       buf.line = line + 1
-      buf.cursor =utf8.len(#buf.lines[buf.line]) - dfe
+      buf.cursor = utf8.len(buf.lines[buf.line]) - dfe
       wrap(buf)
     end
   elseif #key == 1 then
@@ -819,6 +819,8 @@ while true do
           buf.line = i
           found = true
           wrap(buf)
+          process("down")
+          process("up")
           break
         end
       end
