@@ -1,6 +1,6 @@
 -- VLERC parsing
 
-rc = {syntax=true}
+rc = {syntax=true,cachelastline=true}
 
 do
   local function split(line)

@@ -7,7 +7,6 @@ function vt.set_cursor(x, y)
 end
 
 function vt.get_cursor()
-  --os.execute("stty raw -echo")
   io.write("\27[6n")
   local resp = ""
   repeat
@@ -15,7 +14,6 @@ function vt.get_cursor()
     resp = resp .. c
   until c == "R"
   local y, x = resp:match("\27%[(%d+);(%d+)R")
-  --os.execute("stty sane")
   return tonumber(x), tonumber(y)
 end
 

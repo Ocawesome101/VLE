@@ -48,7 +48,6 @@ end
 local function read_file(file)
   local handle, err = io.open(file, "r")
   if not handle then
-    io.stderr:write(err)
     return ""
   end
   local data = handle:read("a")
@@ -58,7 +57,7 @@ end
 
 local function write_file(file, data)
   local handle, err = io.open(file, "w")
-  if not handle then io.stderr:write(err) return end
+  if not handle then return end
   handle:write(data)
   handle:close()
 end
@@ -85,7 +84,6 @@ local function save_last_pos(file, n)
   else
     data = data .. string.format("%s:%d\n", abs, n)
   end
-  io.stderr:write(data)
   write_file(vp_path, data)
 end
 
@@ -111,8 +109,8 @@ local function mkbuffer(file)
   buffers[n].lines = {}
   for line in handle:lines() do
     buffers[n].lines[#buffers[n].lines + 1]
-        -- strip Windows line endings
-        = line:gsub("\r", "")
+        -- strip Windows line endings, replace tabs with spaces
+        = line:gsub("\r", ""):gsub("\t", "  ")
   end
   buffers[n].lines[1] = buffers[n].lines[1] or ""
   handle:close()
@@ -134,7 +132,7 @@ local function update_cursor(l)
   local line = buf.line
   local scroll = buf.scroll
   local from_end = buf.cursor
-  local text_len = #buf.lines[line]
+  local text_len = utf8.len(buf.lines[line])
   local x, y, t = 1, 0, 0
   for i=scroll, line - 1, 1 do
     y = y + (l[i] or 0)
@@ -166,7 +164,7 @@ local function redraw_buffer()
     vt.set_cursor(1, written + 1)
     local line = i + buf.scroll
     if buf.lines[line] then
-      local lines = math.max(1, math.ceil(#buf.lines[line] / w))
+      local lines = math.max(1, math.ceil(utf8.len(buf.lines[line]) / w))
       if written + lines >= h then
         break
       end
@@ -192,7 +190,8 @@ local function redraw_buffer()
     io.write("\27[2K", _insert)
   end
   vt.set_cursor(w - 12, h)
-  io.write(string.format("\27[K%d,%d", buf.line, #buf.lines[buf.line] - buf.cursor + 1))
+  io.write(string.format("\27[K%d,%d",
+    buf.line, utf8.len(buf.lines[buf.line]) - buf.cursor + 1))
   update_cursor(line_len)
 end
 
@@ -206,8 +205,8 @@ local function wrap(buf)
   if buf.line > #buf.lines then
     buf.line = #buf.lines
   end
-  if buf.cursor > #buf.lines[buf.line] then
-    buf.cursor = #buf.lines[buf.line]
+  if buf.cursor > utf8.len(buf.lines[buf.line]) then
+    buf.cursor = utf8.len(buf.lines[buf.line])
   end
   if buf.cursor < 0 then
     buf.cursor = 0
@@ -227,10 +226,11 @@ local function process(key)
   local line = buf.line
   buf.cache[line] = nil
   local ltext = buf.lines[line]
+  local ltlen = utf8.len(ltext)
   local cursor = buf.cursor
   if key == "backspace" then
     if #ltext > 0 then
-      if cursor == #ltext then
+      if cursor == utf8.len(ltext) then
         for i=line, h - (buf.scroll + line), 1 do
           buf.cache[line] = nil
         end
@@ -240,15 +240,15 @@ local function process(key)
         wrap(buf)
         line = buf.line
         buf.lines[line] = buf.lines[line] .. tmp
-        buf.cursor = math.min(old, #buf.lines[line])
+        buf.cursor = math.min(old, utf8.len(buf.lines[line]))
       else
-        buf.lines[line] = ltext:sub(1, #ltext - cursor - 1) .. ltext:sub(#ltext - cursor + 1)
+        buf.lines[line] = ltext:sub(1, ltlen - cursor - 1) ..
+          ltext:sub(ltlen - cursor + 1)
       end
     elseif line > 0 then
       table.remove(buf.lines, line)
       buf.cursor = 0
       wrap(buf)
-      --process("up")
     end
     buf.unsaved = true
   elseif key == "return" then
@@ -260,15 +260,15 @@ local function process(key)
       table.insert(buf.lines, line + 1, (" "):rep(#ident))
       buf.line = line + 1
     else
-      local tmp = ltext:sub(#ltext - cursor + 1)
+      local tmp = ltext:sub(ltlen - cursor + 1)
       table.insert(buf.lines, line + 1, (" "):rep(#ident) .. tmp)
-      buf.lines[line] = ltext:sub(1, #ltext - cursor)
+      buf.lines[line] = ltext:sub(1, ltlen - cursor)
       buf.line = line + 1
     end
     buf.unsaved = true
     wrap(buf)
   elseif key == "left" then
-    if cursor < #ltext then
+    if cursor < ltlen then
       buf.cursor = cursor + 1
     end
   elseif key == "right" then
@@ -277,20 +277,21 @@ local function process(key)
     end
   elseif key == "up" then
     if line > 1 then
-      local dfe = #(buf.lines[line] or "") - cursor
+      local dfe = utf8.len(buf.lines[line] or "") - cursor
       buf.line = line - 1
-      buf.cursor = #buf.lines[buf.line] - dfe
+      buf.cursor = utf8.len(buf.lines[buf.line]) - dfe
       wrap(buf)
     end
   elseif key == "down" then
     if line < #buf.lines then
-      local dfe = #(buf.lines[line] or "") - cursor
+      local dfe = utf8.len(buf.lines[line] or "") - cursor
       buf.line = line + 1
-      buf.cursor = #buf.lines[buf.line] - dfe
+      buf.cursor =utf8.len(#buf.lines[buf.line]) - dfe
       wrap(buf)
     end
   elseif #key == 1 then
-    buf.lines[line] = ltext:sub(1, #ltext - cursor) .. key .. ltext:sub(#ltext - cursor + 1)
+    buf.lines[line] = ltext:sub(1, ltlen - cursor) .. key ..
+      ltext:sub(ltlen - cursor + 1)
     buf.unsaved = true
   end
   redraw_buffer()
@@ -306,8 +307,8 @@ local function getinput(pref)
     io.write(buf.." \27[D")
     local key, flags = kbd.get_key()
     flags = flags or {}
-    if not (flags.ctrl or flags.alt) then
-      if key == "backspace" then
+    if (flags.ctrl and key == "h") or not (flags.ctrl or flags.alt) then
+      if (flags.ctrl and key == "h") or key == "backspace" then
         if #buf == 0 then return "" end
         buf = buf:sub(1, -2)
       else
