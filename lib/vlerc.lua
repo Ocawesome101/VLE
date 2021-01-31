@@ -1,6 +1,6 @@
 -- VLERC parsing
 
-rc = {}
+rc = {syntax=true}
 
 do
   local function split(line)
@@ -55,8 +55,11 @@ do
       rc[field] = color
     elseif c == "cachelastline" then
       local arg = pop(words)
-      arg = (arg == "yes") or (arg == "true")
+      arg = (arg == "yes") or (arg == "true") or (arg == "on")
       rc.cachelastline = arg
+    elseif c == "syntax" then
+      local arg = pop(words)
+      rc.syntax = (arg == "yes") or (arg == "true") or (arg == "on")
     end
   end
 

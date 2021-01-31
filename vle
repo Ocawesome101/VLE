@@ -93,7 +93,7 @@ end
 local rc
 -- VLERC parsing
 
-rc = {}
+rc = {syntax=true}
 
 do
   local function split(line)
@@ -148,8 +148,11 @@ do
       rc[field] = color
     elseif c == "cachelastline" then
       local arg = pop(words)
-      arg = (arg == "yes") or (arg == "true")
+      arg = (arg == "yes") or (arg == "true") or (arg == "on")
       rc.cachelastline = arg
+    elseif c == "syntax" then
+      local arg = pop(words)
+      rc.syntax = (arg == "yes") or (arg == "true") or (arg == "on")
     end
   end
 
@@ -332,7 +335,7 @@ local insert = false
 local function try_get_highlighter(name)
   name = name or "NEW"
   local ext = name:match("%.(.-)$")
-  if not ext then
+  if (not ext) or (not rc.syntax) then
     return
   end
   local try = "/usr/share/VLE/"..ext..".vle"

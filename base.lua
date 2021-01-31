@@ -17,7 +17,7 @@ local insert = false
 local function try_get_highlighter(name)
   name = name or "NEW"
   local ext = name:match("%.(.-)$")
-  if not ext then
+  if (not ext) or (not rc.syntax) then
     return
   end
   local try = "/usr/share/VLE/"..ext..".vle"
