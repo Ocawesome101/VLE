@@ -350,6 +350,56 @@ local function try_get_highlighter(name)
   return nil
 end
 
+local function get_abs_path(file)
+  local pwd = os.getenv("PWD")
+  if file:sub(1,1) == "/" or not pwd then return file end
+  return string.format("%s/%s", pwd, file):gsub("[\\/]+", "/")
+end
+
+local function read_file(file)
+  local handle, err = io.open(file, "r")
+  if not handle then
+    io.stderr:write(err)
+    return ""
+  end
+  local data = handle:read("a")
+  handle:close()
+  return data
+end
+
+local function write_file(file, data)
+  local handle, err = io.open(file, "w")
+  if not handle then io.stderr:write(err) return end
+  handle:write(data)
+  handle:close()
+end
+
+local function get_last_pos(file)
+  local abs = get_abs_path(file)
+  local pdata = read_file(os.getenv("HOME") .. "/.vle_positions")
+  local pat = abs:gsub("[%[%]%(%)%^%$%%%+%*%*]", "%%%1") .. ":(%d+)\n"
+  if pdata:match(pat) then
+    local n = tonumber(pdata:match(pat))
+    return n or 1
+  end
+  return 1
+end
+
+local function save_last_pos(file, n)
+  local abs = get_abs_path(file)
+  local escaped = abs:gsub("[%[%]%(%)%^%$%%%+%*%*]", "%%%1")
+  local pat = "(" .. escaped .. "):(%d+)\n"
+  local vp_path = os.getenv("HOME") .. "/.vle_positions"
+  local data = read_file(vp_path)
+  if data:match(pat) then
+    data = data:gsub(pat, string.format("%%1:%d\n", n))
+  else
+    data = data .. string.format("%s:%d\n", abs, n)
+  end
+  io.stderr:write(data)
+  write_file(vp_path, data)
+end
+
 local function mkbuffer(file)
   local n = #buffers + 1
   buffers[n] = {
@@ -377,6 +427,8 @@ local function mkbuffer(file)
   end
   buffers[n].lines[1] = buffers[n].lines[1] or ""
   handle:close()
+  local og_pos = get_last_pos(file)
+  buffers[n].line = og_pos
 end
 
 for i=1, #args, 1 do
@@ -601,6 +653,7 @@ commands = {
       swr("\27[101;97mE: unsaved work; :c! to override")
       return
     end
+    save_last_pos(buffers[current].name, buffers[current].line)
     table.remove(buffers, current)
     current = math.max(1, #buffers)
     if #buffers == 0 then
@@ -691,6 +744,11 @@ commands = {
     if (not os.getenv("TERM")) or os.getenv("TERM"):match("OpenComputers") then
       io.write("\27(r\27(L\27[m")
     end
+    for k, v in pairs(buffers) do
+      if not v.unsaved then
+        save_last_pos(v.name, v.line)
+      end
+    end
     os.execute("stty sane")
     os.exit(0)
   end,
@@ -711,6 +769,9 @@ if (not os.getenv("TERM")) or os.getenv("TERM"):match("OpenComputers") then
 end
 
 w, h = vt.get_term_size()
+-- ugly but it works!
+process("down")
+process("up")
 
 local last_pat = ""
 while true do
