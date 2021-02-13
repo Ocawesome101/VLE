@@ -230,9 +230,10 @@ local function process(key)
   local cursor = buf.cursor
   if key == "backspace" then
     if #ltext > 0 then
-      if cursor == utf8.len(ltext) then
+      if cursor == ltlen then
+        if buf.line <= 1 then return end
         for i=line, h - (buf.scroll + line), 1 do
-          buf.cache[line] = nil
+          buf.cache[i] = nil
         end
         local old = cursor
         local tmp = table.remove(buf.lines, line)
@@ -245,9 +246,10 @@ local function process(key)
         buf.lines[line] = ltext:sub(1, ltlen - cursor - 1) ..
           ltext:sub(ltlen - cursor + 1)
       end
-    elseif line > 0 then
+    elseif line > 1 then
       table.remove(buf.lines, line)
       buf.cursor = 0
+      buf.line = line - 1
       wrap(buf)
     end
     buf.unsaved = true
