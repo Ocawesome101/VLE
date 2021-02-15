@@ -330,12 +330,24 @@ local current = 1
 local w, h
 local insert = false
 
+-- substitute extensions
+local substitutes = {
+  python3 = "py",
+  python2 = "py",
+  bashrc = "sh",
+  bash = "sh",
+  ["lua5.1"] = "lua",
+  ["lua5.2"] = "lua",
+  ["lua5.3"] = "lua",
+  ["lua5.4"] = "lua"
+}
 local function try_get_highlighter(name)
   name = name or "NEW"
   local ext = name:match("%.(.-)$")
   if (not ext) or (not rc.syntax) then
     return
   end
+  if substitutes[ext] then ext = substitutes[ext] end
   local try = "/usr/share/VLE/"..ext..".vle"
   local also_try = os.getenv("HOME").."/.local/share/VLE/"..ext..".vle"
   local ok, ret = pcall(syntax.load, also_try)
@@ -421,6 +433,14 @@ local function mkbuffer(file)
   local handle = io.open(file, "r")
   if not handle then
     return
+  end
+  local first = handle:read("l")
+  handle:seek("set")
+  -- shebang parsing
+  local runner = first:match("^#!/.-([^%s/]+)$")
+  if runner and not buffers[n].highlighter then
+    if substitutes[runner] then runner = substitutes[runner] end
+    buffers[n].highlighter = try_get_highlighter("bla."..runner)
   end
   buffers[n].lines = {}
   for line in handle:lines() do

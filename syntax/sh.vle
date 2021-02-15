@@ -1,6 +1,6 @@
 # Basic highlighting for shell scripts
 
-keychars ={}[]()$|><&*.:
+keychars ={}[]()$|><&*:~/
 keywords alias bg bind break builtin caller case in esac cd command compgen
 keywords complete compopt continue coproc declare dirs disown echo enable eval
 keywords exec exit export fc fg for do done function getopts hash help history
@@ -10,3 +10,4 @@ keywords suspend test time times trap type typeset ulimit umask unalias unset
 keywords until wait while
 const true false
 constpat ^%-(.+)$
+constpat ^([%d.]+)$
