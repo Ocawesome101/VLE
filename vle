@@ -736,6 +736,9 @@ commands = {
     local data = table.concat(buffers[current].lines, "\n") .. "\n"
     handle:write(data)
     handle:close()
+    if #name > (h - 10) then -- limit displayed name length
+      name = "..." .. name:sub(h - 13)
+    end
     swr("\"", name, "\", ", tostring(#buffers[current].lines), "L, ", #data, "B written")
     buffers[current].unsaved = false
   end,
