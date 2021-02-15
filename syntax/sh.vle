@@ -1,5 +1,12 @@
 # Basic highlighting for shell scripts
 
-keychars ={}[]()$|><&*
-keywords if then else elif fi while do done case in
+keychars ={}[]()$|><&*.:
+keywords alias bg bind break builtin caller case in esac cd command compgen
+keywords complete compopt continue coproc declare dirs disown echo enable eval
+keywords exec exit export fc fg for do done function getopts hash help history
+keywords if then elif fi jobs kill let local logout mapfile popd printf pushd
+keywords pwd read readarray readonly return select set shift shopt source
+keywords suspend test time times trap type typeset ulimit umask unalias unset
+keywords until wait while
+const true false
 constpat ^%-(.+)$
