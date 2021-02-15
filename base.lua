@@ -323,7 +323,7 @@ local function getinput(pref)
 end
 
 local function swr(...)
-  io.write("\27[2K\27[G", ...)
+  io.write("\27[2K\27[", h, ";1H", ...)
   io.write("\27[39;49m")
 end
 
