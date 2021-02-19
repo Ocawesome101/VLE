@@ -91,7 +91,7 @@ end
 local rc
 -- VLERC parsing
 
-rc = {syntax=true,cachelastline=true}
+rc = {syntax=true,cachelastline=true,commands={}}
 
 do
   local function split(line)
@@ -151,6 +151,21 @@ do
     elseif c == "syntax" then
       local arg = pop(words)
       rc.syntax = (arg == "yes") or (arg == "true") or (arg == "on")
+    elseif c == "macro" then -- basic macro function support
+      local cpat = pop(words)
+      local fnsrc = table.concat(words, " ", 1, #words)
+      local ok, err = load("return " .. fnsrc, "=macro("..cpat..")", "bt", _G)
+      if ok then
+        ok, err = pcall(ok)
+      end
+      if not ok then
+        io.stderr:write("error loading macro: ", err, "\n")
+        io.stderr:write("macro source: ", fnsrc, "\n")
+        io.read()
+      end
+      if type(err) == "function" then
+        rc.commands[cpat] = err
+      end
     end
   end
 
@@ -830,6 +845,21 @@ while true do
     for k, v in pairs(commands) do
       if cmd:match(k) then
         v(cmd:match(k))
+        break
+      end
+    end
+    for k, v in pairs(rc.commands) do
+      if cmd:match(k) then
+        local text = v(buffers[current], cmd:match(k))
+        if type(text) == "table" then
+          for n, line in ipairs(text) do
+            table.insert(buffers[current].lines, buffers[current].line+n-1,line)
+          end
+        --[[elseif not ok and text then
+          io.stderr:write("error in macro: ", tostring(text), "\n")
+          io.read(1)]]
+        end
+        break
       end
     end
   elseif key == "/" then

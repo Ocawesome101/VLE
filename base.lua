@@ -514,6 +514,21 @@ while true do
     for k, v in pairs(commands) do
       if cmd:match(k) then
         v(cmd:match(k))
+        break
+      end
+    end
+    for k, v in pairs(rc.commands) do
+      if cmd:match(k) then
+        local text = v(buffers[current], cmd:match(k))
+        if type(text) == "table" then
+          for n, line in ipairs(text) do
+            table.insert(buffers[current].lines, buffers[current].line+n-1,line)
+          end
+        --[[elseif not ok and text then
+          io.stderr:write("error in macro: ", tostring(text), "\n")
+          io.read(1)]]
+        end
+        break
       end
     end
   elseif key == "/" then
