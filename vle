@@ -861,5 +861,9 @@ while true do
         end
       end
     end
+  elseif key == "$" then
+    buffers[current].cursor = 0
+  elseif key == "^" then
+    buffers[current].cursor = #buffers[current].lines[buffers[current].line]
   end
 end
