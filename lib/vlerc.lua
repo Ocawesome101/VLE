@@ -1,6 +1,6 @@
 -- VLERC parsing
 
-rc = {syntax=true,cachelastline=true,commands={}}
+rc = {syntax=true,cachelastline=true,commands={},aliases={}}
 
 do
   local function split(line)
@@ -60,20 +60,26 @@ do
     elseif c == "syntax" then
       local arg = pop(words)
       rc.syntax = (arg == "yes") or (arg == "true") or (arg == "on")
-    elseif c == "macro" then -- basic macro function support
+    elseif c == "macro" then -- basic macro support
+      local mt = pop(words)
       local cpat = pop(words)
-      local fnsrc = table.concat(words, " ", 1, #words)
-      local ok, err = load("return " .. fnsrc, "=macro("..cpat..")", "bt", _G)
-      if ok then
-        ok, err = pcall(ok)
-      end
-      if not ok then
-        io.stderr:write("error loading macro: ", err, "\n")
-        io.stderr:write("macro source: ", fnsrc, "\n")
-        io.read()
-      end
-      if type(err) == "function" then
-        rc.commands[cpat] = err
+      if mt == "function" then
+        local fnsrc = table.concat(words, " ", 1, #words)
+        local ok, err = load("return " .. fnsrc, "=macro("..cpat..")", "bt", _G)
+        if ok then
+          ok, err = pcall(ok)
+        end
+        if not ok then
+          io.stderr:write("error loading macro: ", err, "\n")
+          io.stderr:write("macro source: ", fnsrc, "\n")
+          io.read()
+        end
+        if type(err) == "function" then
+          rc.commands[cpat] = err
+        end
+      elseif mt == "alias" then
+        local alias = pop(words)
+        rc.aliases[cpat] = alias
       end
     end
   end

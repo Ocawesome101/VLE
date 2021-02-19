@@ -348,6 +348,17 @@ local function swr(...)
 end
 
 commands = {
+  ["^%.!(.+)$"] = function(cmd)
+    local out, err = io.popen(cmd, "r")
+    if not out then swr(err) return end
+    local n = 1
+    local buf = buffers[current]
+    for line in out:lines() do
+      table.insert(buf.lines, buf.line + n, line)
+      n = n + 1
+    end
+    out:close()
+  end,
   ["^(%d+)$"] = function(n)
     local buf = buffers[current]
     n = tonumber(n) or buf.line
@@ -511,6 +522,11 @@ while true do
     process(key)
   elseif key == ":" then
     local cmd = getinput(":")
+    for k, v in pairs(rc.aliases) do
+      if cmd:match(k) then
+        cmd = cmd:gsub(k, v)
+      end
+    end
     for k, v in pairs(commands) do
       if cmd:match(k) then
         v(cmd:match(k))
