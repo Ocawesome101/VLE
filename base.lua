@@ -121,10 +121,12 @@ local function mkbuffer(file)
   local first = handle:read("l")
   handle:seek("set")
   -- shebang parsing
-  local runner = first:match("^#!/.-([^%s/]+)$")
-  if runner and not buffers[n].highlighter then
-    if substitutes[runner] then runner = substitutes[runner] end
-    buffers[n].highlighter = try_get_highlighter("bla."..runner)
+  if first then
+    local runner = first:match("^#!/.-([^%s/]+)$")
+    if runner and not buffers[n].highlighter then
+      if substitutes[runner] then runner = substitutes[runner] end
+      buffers[n].highlighter = try_get_highlighter("bla."..runner)
+    end
   end
   buffers[n].lines = {}
   for line in handle:lines() do
