@@ -2,4 +2,5 @@
 
 strings off
 comment #
-keywords strings keychars comment keywords const builtin numpat constpat
+keywords operator strings keychars comment keywords const builtin numpat
+keywords constpat

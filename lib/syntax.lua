@@ -29,14 +29,6 @@ do
   str_color = esc(str_color)
   cmt_color = esc(cmt_color)
   
-  local numpat = {}
-  local keywords = {}
-  local keychars = {}
-  local constpat = {}
-  local functions = {}
-  local constants = {}
-  local cprefix = "#"
-  local strings = true
   local function split(l)
     local words = {}
     for w in l:gmatch("[^ ]+") do
@@ -44,11 +36,13 @@ do
     end
     return words
   end
-  local function parse_line(line)
+  local function parse_line(line, numpat, keywords, keychars, constpat,
+                                 functions, constants, operators, ocp, ost)
+    local cprefix, strings = ocp or "#", not not ost
     local words = split(line)
     local cmd = words[1]
     if not cmd then
-      return
+      return cprefix, strings
     elseif cmd == "keychars" then
       for i=2, #words, 1 do
         for c in words[i]:gmatch(".") do
@@ -73,14 +67,21 @@ do
       constpat[#constpat + 1] = words[2]
     elseif cmd == "strings" then
       if words[2] == "on" or words[2] == "true" then
-        strings = true
+        strings = "\"'"
       elseif words[2] == "off" or words[2] == "false" then
         strings = false
+      else
+        strings = strings .. words[2]
+      end
+    elseif cmd == "operator" and words[2] then
+      while words[2] do
+        operators[#operators + 1] = table.remove(words, 2)
       end
     end
+    return cprefix, strings
   end
 
-  local function match_constant(w)
+  local function match_constant(w, constants, constpat)
     if constants[w] then return true end
     for i=1, #constpat, 1 do
       if w:match(constpat[i]) then
@@ -89,28 +90,61 @@ do
     end
     return false
   end
+  
+  local function is_op(op, ops)
+    for i=1, #ops, 1 do
+      if ops[i] == op then
+        return true
+      end
+    end
+  end
 
-  local function mkhighlighter()
+  local function mkhighlighter(file)
+    do
+      return nil
+    end
+    local numpat, keywords, keychars,
+          constpat, functions, constants,
+          operators, cprefix, strings =
+            {}, {}, {}, {}, {}, {}, {}, "#", "\"'"
+    local handle, err = io.open(file, "r")
+    if not handle then
+      return nil
+    end
+    for line in handle:lines() do
+      cprefix, strings = parse_line(line, numpat, keywords, keychars,
+                                    constpat,functions, constants,
+                                    operators, cprefix, strings)
+    end
+    strings = string.format("[%s]", strings)
+    handle:close()
     local kchars = ""
     if #keychars > 0 then
       kchars = "[%" .. table.concat(keychars, "%") .. "]"
     end
     local function words(ln)
       local words = {}
-      local ws, word = "", ""
+      local ws, word, last = "", "", ""
       for char in ln:gmatch(".") do
-        if (char:match(kchars) and #kchars > 0) or char:match("[\"'%s,]") then
+        last = word:sub(-1)
+        if (#kchars > 0 and char:match(kchars)) or char:match("[\"'%s,]") then
           ws = char
           if #word > 0 then words[#words + 1] = word end
           if #ws > 0 then words[#words + 1] = ws end
           word = ""
           ws = ""
+        elseif #last > 0 and is_op(last..char, operators) then
+          word = ws..char
+          if #word > 0 then words[#words + 1] = word end
+          if #ws > 0 then words[#words + 1] = ws end
+          word = ""
+          ws = ""
+        elseif (last..char) and is_op(last, operators) and '' then
         else
           word = word .. char
         end
       end
       if #word > 0 then words[#words + 1] = word end
-      if #ws > 0 then words[#words + 1] = ws end
       return words
     end
 
@@ -119,12 +153,12 @@ do
       local in_str = false
       local in_cmt = false
       for i, word in ipairs(words(line)) do
-        if word:match("[\"']") and strings and not in_str and not in_cmt then
-          in_str = true
+        if strings and word:match(strings) and not in_str and not in_cmt then
+          in_str = word
           ret = ret .. str_color .. word
         elseif in_str then
           ret = ret .. word
-          if word:match("[\"']") then
+          if word == in_str then
             ret = ret .. "\27[39m"
             in_str = false
           end
@@ -136,8 +170,11 @@ do
         else
           local esc = (keywords[word] and keyword_color) or
                       (functions[word] and builtin_color) or
-                      (match_constant(word) and const_color) or
-                      (#kchars > 0 and word:match(kchars) and kchar_color) or ""
+                      (match_constant(word, constants, constpat)
+                        and const_color) or
+                      (#kchars > 0 and word:match(kchars) and kchar_color) or
+                      (is_op(word, operators) and (op_color or kchar_color)) or
+                      ""
           ret = ret .. esc .. word .. (esc ~= "" and "\27[39m" or "")
         end
       end
@@ -149,11 +186,7 @@ do
   end
 
   function syntax.load(file)
-    local handle = io.open(file)
-    for line in handle:lines() do
-      parse_line(line)
-    end
-    return mkhighlighter()
+    return mkhighlighter(file)
   end
 end
 
