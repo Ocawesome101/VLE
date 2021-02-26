@@ -23,11 +23,13 @@ local substitutes = {
   ["lua5.1"] = "lua",
   ["lua5.2"] = "lua",
   ["lua5.3"] = "lua",
-  ["lua5.4"] = "lua"
+  ["lua5.4"] = "lua",
+  cpp = "c", -- might be temporary
+  h = "c"
 }
 local function try_get_highlighter(name)
   name = name or "NEW"
-  local ext = name:match("%.(.-)$")
+  local ext = name:match(".+%.(.-)$")
   if (not ext) or (not rc.syntax) then
     return
   end

@@ -148,7 +148,6 @@ do
     local words = asplit(self, line)
     local in_str, in_cmt
     for i, word in ipairs(words) do
-      io.stderr:write("w[", word, "]\n")
       if strings and word:match(strings) and not in_str and not in_cmt then
         in_str = word:sub(1,1)
         ret = ret .. colors.string .. word

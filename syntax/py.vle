@@ -7,7 +7,8 @@ constpat ^-%d+$
 constpat ^0x%x+$
 constpat ^0b[01]$
 constpat ^0o[0-7]$
-keychars %()!=+[]|@*&^.:/<>
+keychars []()@
+operator = + - / * != += -= /= *= | @ & ^ . : / << > < >>
 keywords break for not class from or continue global pass def if raise and del
 keywords import return as elif in try assert else is while async except lambda
 keywords with await finally nonlocal yield exec

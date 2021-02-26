@@ -1,8 +1,9 @@
 # VLE highlighting V2: Electric Boogaloo
+# this is probably the most feature-complete syntax file of the ones i've
+# written, mostly because Lua is the language I know best.
 
 comment --
 const true false nil
-constpat ::.+::
 keychars []{}(),:
 operator + - / // = ~= >> << > < & | ^ % .. #
 keywords const close local while for repeat until do if in else elseif and or not then end
