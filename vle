@@ -265,14 +265,15 @@ do
     --opchars = "["..opchars:gsub("[%[%]%(%)%.%+%%%$%-%?%^%*]","%%%1").."]"
     for char in line:gmatch(".") do
       local last = cword:sub(-1) or ""
-      if char:match(self.keychars) then
+      if #self.keychars > 2 and char:match(self.keychars) then
         if last == char then -- repeated keychar
           cword = cword .. char
         else -- time to split!
           if #cword > 0 then words[#words+1] = cword end
           cword = char
         end
-      elseif last:match(self.keychars) then -- also time to split
+      elseif #self.keychars > 2 and last:match(self.keychars) then
+        -- also time to split
         if #cword > 0 then words[#words+1] = cword end
         if char == " " then
           words[#words+1]=char
@@ -285,7 +286,7 @@ do
         if #cword > 0 then words[#words + 1] = cword:sub(1,-2) end
         words[#words+1] = last..char
         cword = ""
-      elseif char:match(self.strings) then
+      elseif self.strings and char:match(self.strings) then
         if #cword > 0 then words[#words+1] = cword end
         words[#words+1] = char
         cword = ""
@@ -317,16 +318,10 @@ do
   
   local function isop(self, word)
     return self.operators[word]
-    --[[for i=1, #self.operators, 1 do
-      if self.operators[i] == word then
-        return true
-      end
-    end
-    return false]]
   end
   
   local function iskeychar(self, word)
-    return not not word:match(self.keychars)
+    return #self.keychars > 2 and not not word:match(self.keychars)
   end
   
   local function highlight(self, line)
@@ -381,7 +376,9 @@ do
     for line in handle:lines() do
       parse_line(new, line)
     end
-    new.strings = string.format("[%s]", new.strings)
+    if new.strings then
+      new.strings = string.format("[%s]", new.strings)
+    end
     new.keychars = string.format("[%s]", (new.keychars:gsub(
       "[%[%]%(%)%.%+%%%$%-%?%^%*]", "%%%1")))
     return function(line)
