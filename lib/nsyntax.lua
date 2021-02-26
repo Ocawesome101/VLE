@@ -94,7 +94,8 @@ do
         else
           cword = char
         end
-      elseif self.operators[last .. char] then
+      -- not the cleanest solution, but it'll do
+      elseif #last > 0 and self.operators[last .. char] then
         if #cword > 0 then words[#words + 1] = cword:sub(1,-2) end
         words[#words+1] = last..char
         cword = ""
@@ -148,6 +149,7 @@ do
     local words = asplit(self, line)
     local in_str, in_cmt
     for i, word in ipairs(words) do
+      --io.stderr:write(word, "\n")
       if strings and word:match(strings) and not in_str and not in_cmt then
         in_str = word:sub(1,1)
         ret = ret .. colors.string .. word
