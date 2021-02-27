@@ -1,4 +1,4 @@
 # basic markdown highlighting
 
-strings off # markdown has no strings, so disable them
-keychars -*`[]()
+strings ` # markdown has no strings, so treat codeblocks as strings.  why not?
+keychars -*[]()

@@ -4,7 +4,7 @@
 local vt = require("lib/iface")
 local kbd = require("lib/kbd")
 require("lib/vlerc")
-local syntax = require("lib/syntax")
+local syntax = require("lib/nsyntax")
 
 local args = {...}
 
@@ -23,11 +23,13 @@ local substitutes = {
   ["lua5.1"] = "lua",
   ["lua5.2"] = "lua",
   ["lua5.3"] = "lua",
-  ["lua5.4"] = "lua"
+  ["lua5.4"] = "lua",
+  cpp = "c", -- might be temporary
+  h = "c"
 }
 local function try_get_highlighter(name)
   name = name or "NEW"
-  local ext = name:match("%.(.-)$")
+  local ext = name:match(".+%.(.-)$")
   if (not ext) or (not rc.syntax) then
     return
   end
@@ -121,10 +123,12 @@ local function mkbuffer(file)
   local first = handle:read("l")
   handle:seek("set")
   -- shebang parsing
-  local runner = first:match("^#!/.-([^%s/]+)$")
-  if runner and not buffers[n].highlighter then
-    if substitutes[runner] then runner = substitutes[runner] end
-    buffers[n].highlighter = try_get_highlighter("bla."..runner)
+  if first then
+    local runner = first:match("^#!/.-([^%s/]+)$")
+    if runner and not buffers[n].highlighter then
+      if substitutes[runner] then runner = substitutes[runner] end
+      buffers[n].highlighter = try_get_highlighter("bla."..runner)
+    end
   end
   buffers[n].lines = {}
   for line in handle:lines() do
