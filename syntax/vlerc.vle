@@ -1,5 +1,5 @@
 keywords color co syntax cachelastline macro
-builtin co bi bn ct cm is kw kc st color builtin blank constant comment insert
-builtin keyword keychar string black gray lightGray red green yellow blue
+builtin co bi bn ct cm is kw kc st op color builtin blank constant comment
+builtin insert keyword keychar string black gray lightGray red green yellow blue
 builtin magenta cyan white function alias
 const on off yes no true false

@@ -22,6 +22,7 @@ do
     kw = "keyword",
     kc = "keychar",
     st = "string",
+    op = "operator"
   }
   local colors = {
     black = 30,
