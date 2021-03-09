@@ -4,8 +4,8 @@
 
 comment --
 const true false nil
-keychars []{}(),:+-/=~<>&|^%#
-operator + - / // = ~= >> << > < & | ^ % .. #
+keychars []{}(),:+-/=~<>&|^%#*
+operator + - / // = ~= >> << > < & * | ^ % .. #
 keywords const close local while for repeat until do if in else elseif and or not then end
 keywords function return goto break
 constpat ^[%d%.]+$
