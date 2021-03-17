@@ -1,0 +1,5 @@
+# StackVM highlighting because why not
+
+keychars ; : + - / * @ { } [ ] ( ) = , & #
+keywords use for in if else dec
+builtin printf open read write close hashmap array fn int char float str

@@ -62,7 +62,7 @@ do
       elseif words[2] == "off" then
         self.strings = false
       else
-        self.strings = self.strings .. (words[2] or "")
+        self.strings = (words[2] or "")
       end
     end
   end
