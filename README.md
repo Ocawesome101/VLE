@@ -4,8 +4,6 @@ Not to be confused with Monolith's VLED.
 
 This is a text editor, similar to [TLE](https://github.com/ocawesome101/tle), but modal.
 
-To run `standalone.sh` on Mac OS you'll need to install GNU coreutils because there are some dependencies on GNU-specific behavior.
-
 Commands are generally single letters, followed if necessary by arguments.  All commands must be prefixed with a `:`.  Switch between insert and command modes with the `[TAB]` key.  Otherwise mostly use like Vim.
 
 Supports syntax highlighting - see **Highlighting** below.
@@ -40,4 +38,4 @@ This parser checks the first word of every line for the following words, and act
  - `constpat`: Adds a pattern against which words will be checked to see if they are constants.  Useful in cases such as Lua's `goto`, where `goto` targets must be dynamically matched.  Also useful for numbers.
  - `strings [on|off|true|false]`: Sets whether the parser should highlight strings.
 
-If you have any questions, or you discover a bug, poke me at `i develop things#5343` on Discord.  I also usually hang out on EsperNet IRC, in `#oc`, as Ocawesome101.
+If you have any questions, or you discover a bug, poke me at `/bin/ocawesome --101#5343` on Discord.  I also occasionally hang out on EsperNet IRC, in `#oc`, as Ocawesome101.
