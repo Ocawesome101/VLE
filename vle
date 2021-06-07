@@ -27,6 +27,7 @@ function vt.get_term_size()
   vt.set_cursor(cx, cy)
   return w, h
 end
+
 -- keyboard interface with standard VT100 terminals --
 
 local kbd = {}
@@ -88,6 +89,7 @@ function kbd.get_key()
   --os.execute("stty sane")
   return key, flags
 end
+
 local rc
 -- VLERC parsing
 
@@ -387,6 +389,7 @@ do
     end
   end
 end
+
 
 local args = {...}
 
